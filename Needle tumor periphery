@@ -1,0 +1,78 @@
+Image1 = imread('C:\Users\Owner\Desktop\Stoll Fellowship Code\Raw Image Data\max_intensity.PNG');
+Image2 = rgb2gray(Image1); 
+imshow(Image2);
+title('Original Image');
+
+
+E = entropyfilt(Image2);
+S = stdfilt(Image2, ones(9));
+R = rangefilt(Image2, ones(9));
+
+Eim = rescale(E);
+Sim = rescale(S);
+
+%montage({Eim,Sim,R},'Size',[1 3],'BackgroundColor','w',"BorderSize",20)
+%title('Texture Images Showing Local Entropy, Local Standard Deviation, and Local Range'); 
+%Eim2 = rgb2gray(Eim);
+BW1 = imbinarize(Eim,0.4);
+imshow(BW1)
+title('Thresholded Texture Image');
+
+BWao = bwareaopen(BW1,2000);
+imshow(BWao)
+title('Area-Opened Texture Image');
+
+
+nhood = ones(3);
+closeBWao = imclose(BWao,nhood);
+imshow(closeBWao)
+title('Closed Texture Image');
+
+mask = imfill(closeBWao,'holes');
+imshow(mask);
+title('Mask of Bottom Texture');
+
+textureTop = Image2;
+textureTop(mask) = 0;
+textureBottom = Image2;
+textureBottom(~mask) = 0;
+
+
+% Shows segmented texture image
+imshow(textureBottom);
+title('Segmented Texture Image');
+
+%textureBottom2 = rgb2gray(textureBottom);
+%xyImage = mean(textureBottom, 3);
+%imshow(xyImage); 
+
+BI = imbinarize(textureBottom);
+%BI = imbinarize(xyImage); 
+%imshow(BI); 
+
+
+TPmask = boundarymask(BI);
+TPBoundary = imshow(labeloverlay(Image2, TPmask, 'Transparency',0));
+
+BWdfill = imfill(TPmask,'holes');
+imshow(BWdfill)
+title('Binary Image with Filled Holes')
+
+BWdfill2 = imfill(BWdfill, 'holes');
+imshow(BWdfill2);
+
+%BW_active_contour = activecontour(textureBottom, BWdfill2, 20);
+
+BW_active_contour = activecontour(textureBottom,BWdfill2,30,'Chas-Vese');
+%imageSegmenter(textureBottom);
+
+imshow(BW_active_contour);
+
+%Bwdfill = imfill(BW_active_contour);
+%imshow(BWdfill); 
+
+BWmask = boundarymask(BW_active_contour);
+%BWboundary = imoverlay(Image1,BWmask);
+%BWboundary2 = rgb2gray(BWboundary);
+Image1_adjust = adapthisteq(Image2);
+imshow(labeloverlay(Image1_adjust,BWmask, 'Transparency',0));
